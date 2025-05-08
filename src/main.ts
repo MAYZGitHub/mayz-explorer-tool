@@ -1,15 +1,22 @@
 import dotenv from 'dotenv';
 dotenv.config();
-console.log('🔍 BLOCKFROST_API_KEY:', process.env.BLOCKFROST_API_KEY);
 
 import { getUTXOs, getDatum, getAssetsUnderPolicy, getAssetHolders } from './helpers/blockfrost';
 
-const INVEST_UNITS_ADDRESS = 'addr1w8gdpwxszrtvlqutsmnexyshkxfa4x0q7e87d026hhdjljc2drj9d';
+const INVEST_UNITS_ADDRESS_GOV = process.env.INVEST_UNITS_ADDRESS_GOV as string;
+if (!INVEST_UNITS_ADDRESS_GOV) {
+    throw new Error("❌ INVEST_UNITS_ADDRESS_GOV not set. Make sure it's in your .env file.");
+}
 
-async function exploreInvestUnits() {
+const INVEST_UNITS_ADDRESS_DAPP = process.env.INVEST_UNITS_ADDRESS_DAPP as string;
+if (!INVEST_UNITS_ADDRESS_DAPP) {
+    throw new Error("❌ INVEST_UNITS_ADDRESS_DAPP not set. Make sure it's in your .env file.");
+}
+
+async function exploreInvestUnits(invest_unit_sc_address: string) {
     console.log('🚀 Starting Fund Holdings Resolver');
 
-    const utxos = await getUTXOs(INVEST_UNITS_ADDRESS);
+    const utxos = await getUTXOs(invest_unit_sc_address);
 
     for (const utxo of utxos) {
         const datumHash = utxo.data_hash;
@@ -104,4 +111,10 @@ async function inspectFundHoldingAssets(holdingAddress: string, holdingPolicy: s
     }
 }
 
-exploreInvestUnits();
+(async () => {
+    console.log("🔍 Exploring Invest Units for GOVERNANCE fund...");
+    await exploreInvestUnits(INVEST_UNITS_ADDRESS_GOV);
+
+    console.log("🔍 Exploring Invest Units for DAPP fund...");
+    await exploreInvestUnits(INVEST_UNITS_ADDRESS_DAPP);
+})();
